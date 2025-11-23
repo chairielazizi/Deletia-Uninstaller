@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, TrendingUp, Calendar, Package } from 'lucide-react';
+import { getRecentlyUsed, getFrequentlyUsed, simulateUsageData } from '../utils/usageTracker';
 
 const Dashboard = () => {
   const [appCount, setAppCount] = useState('--');
   const [apps, setApps] = useState([]);
   const [recentlyInstalled, setRecentlyInstalled] = useState([]);
+  const [recentlyUsed, setRecentlyUsed] = useState([]);
+  const [frequentlyUsed, setFrequentlyUsed] = useState([]);
 
   useEffect(() => {
     const fetchAppData = async () => {
@@ -26,6 +29,16 @@ const Dashboard = () => {
             .slice(0, 5);
           
           setRecentlyInstalled(withDates);
+
+          // Initialize usage data if empty (simulate for demo)
+          const recent = getRecentlyUsed(5);
+          if (recent.length === 0) {
+            simulateUsageData();
+          }
+
+          // Load usage tracking data
+          setRecentlyUsed(getRecentlyUsed(5));
+          setFrequentlyUsed(getFrequentlyUsed(5));
         } catch (error) {
           console.error('Error fetching app data:', error);
           setAppCount('Error');
@@ -111,10 +124,24 @@ const Dashboard = () => {
             <h2>Recently Used</h2>
           </div>
           <div className="app-list">
-            <div className="placeholder-state">
-              <p>⚡ Usage tracking coming soon</p>
-              <span>Requires background monitoring</span>
-            </div>
+            {recentlyUsed.length > 0 ? (
+              recentlyUsed.map((app, index) => (
+                <div key={index} className="app-item">
+                  <div className="app-icon-small">
+                    <Package size={16} color="#38bdf8" />
+                  </div>
+                  <div className="app-details">
+                    <div className="app-name">{app.name}</div>
+                    <div className="app-meta-text">{formatDate(app.lastUsed)}</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="placeholder-state">
+                <p>⚡ No usage data yet</p>
+                <span>Launch apps to track usage</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -125,10 +152,24 @@ const Dashboard = () => {
             <h2>Frequently Used</h2>
           </div>
           <div className="app-list">
-            <div className="placeholder-state">
-              <p>📊 Frequency tracking coming soon</p>
-              <span>Requires background monitoring</span>
-            </div>
+            {frequentlyUsed.length > 0 ? (
+              frequentlyUsed.map((app, index) => (
+                <div key={index} className="app-item">
+                  <div className="app-icon-small">
+                    <Package size={16} color="#38bdf8" />
+                  </div>
+                  <div className="app-details">
+                    <div className="app-name">{app.name}</div>
+                    <div className="app-meta-text">{app.count} launches</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="placeholder-state">
+                <p>📊 No usage data yet</p>
+                <span>Launch apps to track frequency</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -138,6 +179,25 @@ const Dashboard = () => {
           padding: 40px;
           flex: 1;
           overflow-y: auto;
+          overflow-x: hidden;
+          height: 100%;
+        }
+
+        .dashboard-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .dashboard-container::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .dashboard-container::-webkit-scrollbar-thumb {
+          background: var(--bg-secondary);
+          border-radius: 4px;
+        }
+
+        .dashboard-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
         }
         
         .stats-grid {
