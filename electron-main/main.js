@@ -8,7 +8,8 @@ if (!app.isPackaged) {
     hardResetMethod: 'exit'
   });
 }
-const { getInstalledApps, uninstallApp } = require('./system')
+
+const systemAPI = require('./system')
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -51,13 +52,21 @@ app.on('window-all-closed', () => {
   }
 })
 
+// System API handlers
 ipcMain.handle('get-apps', async () => {
-  const apps = await getInstalledApps()
-  return apps
+  return await systemAPI.getInstalledApps()
 })
 
 ipcMain.handle('uninstall-app', async (event, uninstallString) => {
-  return await uninstallApp(uninstallString)
+  return await systemAPI.uninstallApp(uninstallString)
+})
+
+ipcMain.handle('get-disk-space', async () => {
+  return await systemAPI.getDiskSpace()
+})
+
+ipcMain.handle('get-temp-size', async () => {
+  return await systemAPI.getTempFilesSize()
 })
 
 // Window control handlers

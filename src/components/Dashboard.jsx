@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, TrendingUp, Calendar, Package } from 'lucide-react';
-import { getRecentlyUsed, getFrequentlyUsed, simulateUsageData } from '../utils/usageTracker';
+import { Clock, TrendingUp, Calendar, Package, ChevronDown, Info } from 'lucide-react';
+import { getRecentlyUsed, getFrequentlyUsed } from '../utils/usageTracker';
+import { getSpaceCleaned, getSystemStatus } from '../utils/systemUtils';
 
 const Dashboard = () => {
   const [appCount, setAppCount] = useState('--');
@@ -8,6 +9,9 @@ const Dashboard = () => {
   const [recentlyInstalled, setRecentlyInstalled] = useState([]);
   const [recentlyUsed, setRecentlyUsed] = useState([]);
   const [frequentlyUsed, setFrequentlyUsed] = useState([]);
+  const [spacePeriod, setSpacePeriod] = useState('all');
+  const [spaceCleaned, setSpaceCleaned] = useState(0);
+  const [systemStatus, setSystemStatus] = useState({ label: 'Good', color: '#10b981' });
 
   useEffect(() => {
     const fetchAppData = async () => {
@@ -30,15 +34,16 @@ const Dashboard = () => {
           
           setRecentlyInstalled(withDates);
 
-          // Initialize usage data if empty (simulate for demo)
-          const recent = getRecentlyUsed(5);
-          if (recent.length === 0) {
-            simulateUsageData();
-          }
-
-          // Load usage tracking data
+          // Load usage tracking data (no auto-simulation)
           setRecentlyUsed(getRecentlyUsed(5));
           setFrequentlyUsed(getFrequentlyUsed(5));
+
+          // Load cleaning history (no auto-simulation)
+          setSpaceCleaned(getSpaceCleaned(spacePeriod));
+
+          // Get real system status
+          const status = await getSystemStatus(allApps.length);
+          setSystemStatus(status);
         } catch (error) {
           console.error('Error fetching app data:', error);
           setAppCount('Error');
@@ -47,6 +52,11 @@ const Dashboard = () => {
     };
     fetchAppData();
   }, []);
+
+  // Update space cleaned when period changes
+  useEffect(() => {
+    setSpaceCleaned(getSpaceCleaned(spacePeriod));
+  }, [spacePeriod]);
 
   const parseInstallDate = (dateStr) => {
     if (!dateStr || dateStr.length !== 8) return null;
@@ -70,6 +80,27 @@ const Dashboard = () => {
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
+  const formatSize = (sizeInKB) => {
+    if (sizeInKB === 0) return '0 GB';
+    const sizeInMB = sizeInKB / 1024;
+    if (sizeInMB < 1024) {
+      return `${sizeInMB.toFixed(1)} MB`;
+    }
+    const sizeInGB = sizeInMB / 1024;
+    return `${sizeInGB.toFixed(2)} GB`;
+  };
+
+  const getPeriodLabel = () => {
+    const labels = {
+      all: 'All Time',
+      today: 'Today',
+      week: 'This Week',
+      month: 'This Month',
+      quarter: 'Last 3 Months'
+    };
+    return labels[spacePeriod] || 'All Time';
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Dashboard</h1>
@@ -77,16 +108,65 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <h3>System Status</h3>
-          <p className="value">Good</p>
+          <div className="stat-header-with-info">
+            <h3>System Status</h3>
+            <div className="info-icon-wrapper">
+              <Info size={16} className="info-icon" />
+              <div className="status-tooltip">
+                <div className="tooltip-header">System Health Details</div>
+                <div className="tooltip-item">
+                  <div className="tooltip-label">
+                    <span className={`status-dot status-${systemStatus.details?.diskSpace?.status || 'good'}`}></span>
+                    Disk Space
+                  </div>
+                  <div className="tooltip-value">{systemStatus.details?.diskSpace?.percent || 0}% free</div>
+                </div>
+                <div className="tooltip-item">
+                  <div className="tooltip-label">
+                    <span className={`status-dot status-${systemStatus.details?.appCount?.status || 'good'}`}></span>
+                    App Count
+                  </div>
+                  <div className="tooltip-value">{systemStatus.details?.appCount?.count || 0} apps</div>
+                </div>
+                <div className="tooltip-item">
+                  <div className="tooltip-label">
+                    <span className={`status-dot status-${systemStatus.details?.tempFiles?.status || 'good'}`}></span>
+                    Temp Files
+                  </div>
+                  <div className="tooltip-value">{formatSize(systemStatus.details?.tempFiles?.size || 0)}</div>
+                </div>
+                <div className="tooltip-footer">
+                  <div className="threshold-info">
+                    <strong>Thresholds:</strong><br/>
+                    Disk: Good (&gt;20%), Warning (10-20%), Critical (&lt;10%)<br/>
+                    Apps: Good (&lt;500), Warning (500-800), Critical (&gt;800)<br/>
+                    Temp: Good (&lt;5GB), Warning (5-10GB), Critical (&gt;10GB)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="value" style={{ color: systemStatus.color }}>{systemStatus.label}</p>
         </div>
         <div className="stat-card">
           <h3>Apps Installed</h3>
           <p className="value">{appCount}</p>
         </div>
         <div className="stat-card">
-          <h3>Space Cleaned</h3>
-          <p className="value">0 GB</p>
+          <div className="stat-header-with-dropdown">
+            <h3>Space Cleaned</h3>
+            <div className="period-dropdown">
+              <button className="period-btn" onClick={() => {
+                const periods = ['all', 'today', 'week', 'month', 'quarter'];
+                const currentIndex = periods.indexOf(spacePeriod);
+                const nextIndex = (currentIndex + 1) % periods.length;
+                setSpacePeriod(periods[nextIndex]);
+              }}>
+                {getPeriodLabel()} <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+          <p className="value">{formatSize(spaceCleaned)}</p>
         </div>
       </div>
 
@@ -227,6 +307,148 @@ const Dashboard = () => {
           font-size: 32px;
           font-weight: 700;
           color: var(--text-primary);
+        }
+
+        .stat-header-with-dropdown {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .period-dropdown {
+          position: relative;
+        }
+
+        .period-btn {
+          background: rgba(56, 189, 248, 0.1);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          color: var(--accent-color);
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s;
+        }
+
+        .period-btn:hover {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .stat-header-with-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .info-icon-wrapper {
+          position: relative;
+          display: inline-block;
+        }
+
+        .info-icon {
+          color: var(--text-secondary);
+          cursor: help;
+          transition: color 0.2s;
+        }
+
+        .info-icon:hover {
+          color: var(--accent-color);
+        }
+
+        .status-tooltip {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          margin-top: 8px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--glass-border);
+          border-radius: 12px;
+          padding: 16px;
+          min-width: 280px;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+          z-index: 1000;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .info-icon-wrapper:hover .status-tooltip {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+
+        .tooltip-header {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--glass-border);
+        }
+
+        .tooltip-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          font-size: 12px;
+        }
+
+        .tooltip-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--text-secondary);
+        }
+
+        .tooltip-value {
+          color: var(--text-primary);
+          font-weight: 500;
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .status-dot.status-good {
+          background: #10b981;
+        }
+
+        .status-dot.status-warning {
+          background: #f59e0b;
+        }
+
+        .status-dot.status-critical {
+          background: #ef4444;
+        }
+
+        .tooltip-footer {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid var(--glass-border);
+        }
+
+        .threshold-info {
+          font-size: 10px;
+          color: var(--text-secondary);
+          line-height: 1.5;
+        }
+
+        .threshold-info strong {
+          color: var(--text-primary);
+          font-size: 11px;
         }
 
         .lists-container {

@@ -1,9 +1,78 @@
 const { exec } = require('child_process');
 const util = require('util');
-const execPromise = util.promisify(exec);
-const path = require('path');
-const fs = require('fs');
 const os = require('os');
+const fs = require('fs');
+const path = require('path');
+
+const execPromise = util.promisify(exec);
+
+async function getDiskSpace() {
+  try {
+    // Get system drive (usually C:)
+    const systemDrive = process.env.SystemDrive || 'C:';
+    
+    // Use PowerShell to get disk space info
+    const psCommand = `Get-PSDrive ${systemDrive.replace(':', '')} | Select-Object Used,Free | ConvertTo-Json`;
+    const { stdout } = await execPromise(`powershell.exe -NoProfile -Command "${psCommand}"`, {
+      maxBuffer: 1024 * 1024
+    });
+    
+    const diskInfo = JSON.parse(stdout);
+    const usedBytes = parseInt(diskInfo.Used);
+    const freeBytes = parseInt(diskInfo.Free);
+    const totalBytes = usedBytes + freeBytes;
+    const freePercent = Math.round((freeBytes / totalBytes) * 100);
+    
+    return {
+      total: totalBytes,
+      free: freeBytes,
+      used: usedBytes,
+      freePercent
+    };
+  } catch (error) {
+    console.error('Error getting disk space:', error);
+    // Fallback values
+    return {
+      total: 0,
+      free: 0,
+      used: 0,
+      freePercent: 50
+    };
+  }
+}
+
+async function getTempFilesSize() {
+  try {
+    const tempPaths = [
+      process.env.TEMP || path.join(os.tmpdir()),
+      'C:\\Windows\\Temp'
+    ];
+    
+    let totalSize = 0;
+    
+    for (const tempPath of tempPaths) {
+      try {
+        // Use PowerShell to calculate folder size
+        const psCommand = `(Get-ChildItem -Path "${tempPath}" -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum`;
+        const { stdout } = await execPromise(`powershell.exe -NoProfile -Command "${psCommand}"`, {
+          maxBuffer: 1024 * 1024,
+          timeout: 5000 // 5 second timeout
+        });
+        
+        const size = parseInt(stdout.trim()) || 0;
+        totalSize += size;
+      } catch (err) {
+        console.warn(`Could not calculate size for ${tempPath}:`, err.message);
+      }
+    }
+    
+    // Convert bytes to KB
+    return Math.floor(totalSize / 1024);
+  } catch (error) {
+    console.error('Error getting temp files size:', error);
+    return 0;
+  }
+}
 
 async function getInstalledApps() {
   try {
@@ -54,4 +123,9 @@ async function uninstallApp(uninstallString) {
   }
 }
 
-module.exports = { getInstalledApps, uninstallApp };
+module.exports = { 
+  getInstalledApps, 
+  uninstallApp,
+  getDiskSpace,
+  getTempFilesSize
+};
