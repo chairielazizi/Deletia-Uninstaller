@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Trash2, Search } from 'lucide-react';
+import { Package, Trash2, Search, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCache } from '../context/CacheContext';
+import toast, { Toaster } from 'react-hot-toast';
 
 const formatSize = (sizeInKB) => {
   if (!sizeInKB || sizeInKB === 0) return null;
@@ -13,20 +15,36 @@ const formatSize = (sizeInKB) => {
 };
 
 const AppList = () => {
+  const { fetchApps, loadingApps, appsCache } = useCache();
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchApps = async () => {
-      if (window.electronAPI) {
-        const installedApps = await window.electronAPI.getApps();
-        setApps(installedApps);
-        setLoading(false);
-      }
-    };
-    fetchApps();
-  }, []);
+    // Show cached data immediately if available
+    if (appsCache) {
+      setApps(appsCache);
+      setLoading(false);
+    } else {
+      loadData();
+    }
+  }, [appsCache]);
+
+  const loadData = async () => {
+    setLoading(true);
+    const data = await fetchApps();
+    setApps(data);
+    setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    const data = await fetchApps(true); // Force refresh
+    setApps(data);
+    toast.success('Applications refreshed successfully!', {
+      duration: 3000,
+      position: 'bottom-right',
+    });
+  };
 
   const filteredApps = apps.filter(app => 
     app.DisplayName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -51,7 +69,17 @@ const AppList = () => {
   return (
     <div className="app-list-container">
       <div className="header">
-        <h1>Applications</h1>
+        <div className="header-left">
+          <h1>Applications</h1>
+          <button 
+            className="refresh-btn" 
+            onClick={handleRefresh}
+            disabled={loadingApps}
+            title="Refresh applications"
+          >
+            <RefreshCw size={18} className={loadingApps ? 'spin' : ''} />
+          </button>
+        </div>
         <div className="search-bar">
           <Search size={18} />
           <input 
@@ -100,6 +128,8 @@ const AppList = () => {
         )}
       </div>
 
+      <Toaster />
+
       <style>{`
         .app-list-container {
           display: flex;
@@ -119,10 +149,48 @@ const AppList = () => {
           margin-bottom: 30px;
         }
 
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
         .header h1 {
           font-size: 28px;
           font-weight: 700;
           margin: 0;
+        }
+
+        .refresh-btn {
+          background: rgba(56, 189, 248, 0.1);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          color: var(--accent-color);
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .refresh-btn:hover:not(:disabled) {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .refresh-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .search-bar {

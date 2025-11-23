@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, TrendingUp, Calendar, Package, ChevronDown, Info } from 'lucide-react';
+import { Clock, TrendingUp, Calendar, Package, ChevronDown, Info, RefreshCw } from 'lucide-react';
 import { getRecentlyUsed, getFrequentlyUsed } from '../utils/usageTracker';
-import { getSpaceCleaned, getSystemStatus } from '../utils/systemUtils';
+import { getSpaceCleaned } from '../utils/systemUtils';
+import { useCache } from '../context/CacheContext';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Dashboard = () => {
+  const { fetchDashboardData, loadingDashboard, dashboardCache, systemStatusCache } = useCache();
   const [appCount, setAppCount] = useState('--');
   const [apps, setApps] = useState([]);
   const [recentlyInstalled, setRecentlyInstalled] = useState([]);
@@ -11,47 +14,64 @@ const Dashboard = () => {
   const [frequentlyUsed, setFrequentlyUsed] = useState([]);
   const [spacePeriod, setSpacePeriod] = useState('all');
   const [spaceCleaned, setSpaceCleaned] = useState(0);
-  const [systemStatus, setSystemStatus] = useState({ label: 'Good', color: '#10b981' });
+  const [systemStatus, setSystemStatus] = useState({ 
+    label: 'Good', 
+    color: '#10b981',
+    details: {}
+  });
 
   useEffect(() => {
-    const fetchAppData = async () => {
-      if (window.electronAPI) {
-        try {
-          const allApps = await window.electronAPI.getApps();
-          setAppCount(allApps.length);
-          setApps(allApps);
+    // Show cached data immediately if available
+    if (dashboardCache && systemStatusCache) {
+      processData(dashboardCache.apps, systemStatusCache);
+    } else {
+      loadData();
+    }
+  }, [dashboardCache, systemStatusCache]);
 
-          // Get recently installed apps (sort by InstallDate)
-          const withDates = allApps
-            .filter(app => app.InstallDate)
-            .map(app => ({
-              ...app,
-              parsedDate: parseInstallDate(app.InstallDate)
-            }))
-            .filter(app => app.parsedDate)
-            .sort((a, b) => b.parsedDate - a.parsedDate)
-            .slice(0, 5);
-          
-          setRecentlyInstalled(withDates);
+  const loadData = async () => {
+    const data = await fetchDashboardData();
+    await processData(data.apps, data.systemStatus);
+  };
 
-          // Load usage tracking data (no auto-simulation)
-          setRecentlyUsed(getRecentlyUsed(5));
-          setFrequentlyUsed(getFrequentlyUsed(5));
+  const handleRefresh = async () => {
+    const data = await fetchDashboardData(true); // Force refresh
+    await processData(data.apps, data.systemStatus);
+    toast.success('Dashboard refreshed successfully!', {
+      duration: 3000,
+      position: 'bottom-right',
+    });
+  };
 
-          // Load cleaning history (no auto-simulation)
-          setSpaceCleaned(getSpaceCleaned(spacePeriod));
+  const processData = async (allApps, cachedSystemStatus) => {
+    setAppCount(allApps.length);
+    setApps(allApps);
 
-          // Get real system status
-          const status = await getSystemStatus(allApps.length);
-          setSystemStatus(status);
-        } catch (error) {
-          console.error('Error fetching app data:', error);
-          setAppCount('Error');
-        }
-      }
-    };
-    fetchAppData();
-  }, []);
+    // Use cached system status if available
+    if (cachedSystemStatus) {
+      setSystemStatus(cachedSystemStatus);
+    }
+
+    // Get recently installed apps (sort by InstallDate)
+    const withDates = allApps
+      .filter(app => app.InstallDate)
+      .map(app => ({
+        ...app,
+        parsedDate: parseInstallDate(app.InstallDate)
+      }))
+      .filter(app => app.parsedDate)
+      .sort((a, b) => b.parsedDate - a.parsedDate)
+      .slice(0, 5);
+    
+    setRecentlyInstalled(withDates);
+
+    // Load usage tracking data (no auto-simulation)
+    setRecentlyUsed(getRecentlyUsed(5));
+    setFrequentlyUsed(getFrequentlyUsed(5));
+
+    // Load cleaning history (no auto-simulation)
+    setSpaceCleaned(getSpaceCleaned(spacePeriod));
+  };
 
   // Update space cleaned when period changes
   useEffect(() => {
@@ -103,7 +123,17 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <h1>Dashboard</h1>
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <button 
+          className="refresh-btn" 
+          onClick={handleRefresh}
+          disabled={loadingDashboard}
+          title="Refresh dashboard"
+        >
+          <RefreshCw size={18} className={loadingDashboard ? 'spin' : ''} />
+        </button>
+      </div>
       
       {/* Stats Grid */}
       <div className="stats-grid">
@@ -253,6 +283,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <Toaster />
       
       <style>{`
         .dashboard-container {
@@ -278,6 +310,51 @@ const Dashboard = () => {
 
         .dashboard-container::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dashboard-header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+          font-size: 28px;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .refresh-btn {
+          background: rgba(56, 189, 248, 0.1);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          color: var(--accent-color);
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .refresh-btn:hover:not(:disabled) {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .refresh-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         
         .stats-grid {

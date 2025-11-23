@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import AppList from './components/AppList';
 import Cleaner from './components/Cleaner';
 import Settings from './components/Settings';
+import { CacheProvider } from './context/CacheContext';
 
 function App() {
   const [activeView, setActiveView] = useState('apps')
@@ -25,31 +26,33 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <Titlebar />
-      <div className="app-container">
-        <Sidebar activeView={activeView} setActiveView={setActiveView} />
-        <div className="content-area">{renderContent()}</div>
+    <CacheProvider>
+      <div className="app">
+        <Titlebar />
+        <div className="app-container">
+          <Sidebar activeView={activeView} setActiveView={setActiveView} />
+          <div className="content-area">{renderContent()}</div>
+        </div>
+
+        <style>{`
+          .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          }
+
+          .placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-secondary);
+            font-size: 24px;
+          }
+        `}</style>
       </div>
-
-      <style>{`
-        .content-area {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .placeholder {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
-          color: var(--text-secondary);
-          font-size: 24px;
-        }
-      `}</style>
-    </div>
+    </CacheProvider>
   )
 }
 
