@@ -1,16 +1,66 @@
-# React + Vite
+# Deletia Uninstaller
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A modern, lightweight, and powerful alternative to Revo Uninstaller.**
 
-Currently, two official plugins are available:
+Deletia Uninstaller is designed to give you complete control over your Windows applications. With a sleek, modern interface and powerful cleaning capabilities, it ensures that when you uninstall an app, it's truly gone—no leftovers, no clutter.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Dashboard](assets/screenshots/dashboard.png)
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **🚀 Modern UI/UX**: A beautiful, dark-themed interface built with React and Electron.
+- **🧹 Deep Cleaning**: Scans for and removes leftover files and registry entries after uninstallation.
+- **⚡ Fast & Lightweight**: Optimized performance for quick scanning and removal.
+- **🛡️ Privacy Focused**: Clean temporary files, prefetch data, and recycle bin with a single click.
+- **⚙️ Smart Settings**: Configurable options like "Launch on Startup" and "Minimize to Tray".
+- **📦 Portable Ready**: Can be packaged as a standalone executable.
 
-## Expanding the ESLint configuration
+## 📸 Screenshots
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Applications List
+
+Manage all your installed applications in one place.
+![Applications](assets/screenshots/applications.png)
+
+### System Cleaner
+
+Free up disk space by removing temporary files and system junk.
+![Cleaner](assets/screenshots/cleaner.png)
+
+### Settings
+
+Customize your experience.
+![Settings](assets/screenshots/settings.png)
+
+## 🛠️ Building from Source
+
+To build Deletia Uninstaller yourself, follow these steps:
+
+1.  **Clone the repository**
+
+    ```bash
+    git clone https://github.com/chairielazizi/Deletia-Uninstaller.git
+    cd Deletia-Uninstaller
+    ```
+
+2.  **Install dependencies**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Run in Development Mode**
+
+    ```bash
+    npm run dev:electron
+    ```
+
+4.  **Build for Windows**
+    ```bash
+    npm run build:win
+    ```
+    The installer will be generated in the `release/` directory.
+
+## 📄 License
+
+MIT License
