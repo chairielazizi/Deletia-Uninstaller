@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Moon, Bell, Shield, Info, Zap } from 'lucide-react';
+import { getSettings, saveSetting } from '../utils/settingsManager';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -11,8 +13,43 @@ const Settings = () => {
     minimizeToTray: true,
   });
 
+  useEffect(() => {
+    // Load settings from localStorage
+    const loadedSettings = getSettings();
+    setSettings(loadedSettings);
+  }, []);
+
   const toggleSetting = (key) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    const newValue = !settings[key];
+    const updatedSettings = saveSetting(key, newValue);
+    setSettings(updatedSettings);
+    
+    // Show toast notification
+    toast.success(`Setting updated successfully!`, {
+      duration: 2000,
+      position: 'top-center',
+      style: {
+        background: 'rgba(16, 185, 129, 0.9)',
+        color: '#fff',
+        padding: '16px 24px',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '500',
+      },
+    });
+
+    // Apply setting immediately if needed
+    if (key === 'autoStart') {
+      handleAutoStart(newValue);
+    }
+  };
+
+  const handleAutoStart = (enabled) => {
+    // In a real app, you'd use electron-auto-launch or similar
+    if (window.electronAPI?.setAutoStart) {
+      window.electronAPI.setAutoStart(enabled);
+    }
+    console.log(`Auto-start ${enabled ? 'enabled' : 'disabled'}`);
   };
 
   return (
@@ -162,6 +199,15 @@ const Settings = () => {
         </div>
       </div>
 
+      <Toaster 
+        toastOptions={{
+          style: {
+            background: 'rgba(16, 185, 129, 0.9)',
+            color: '#fff',
+          },
+        }}
+      />
+      
       <style>{`
         .settings-container {
           padding: 40px;

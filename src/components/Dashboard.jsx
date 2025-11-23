@@ -39,7 +39,15 @@ const Dashboard = () => {
     await processData(data.apps, data.systemStatus);
     toast.success('Dashboard refreshed successfully!', {
       duration: 3000,
-      position: 'bottom-right',
+      position: 'top-center',
+      style: {
+        background: 'rgba(16, 185, 129, 0.9)',
+        color: '#fff',
+        padding: '16px 24px',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '500',
+      },
     });
   };
 
@@ -284,7 +292,14 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <Toaster />
+      <Toaster 
+        toastOptions={{
+          style: {
+            background: 'rgba(16, 185, 129, 0.9)',
+            color: '#fff',
+          },
+        }}
+      />
       
       <style>{`
         .dashboard-container {
