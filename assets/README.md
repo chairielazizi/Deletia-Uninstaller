@@ -1,3 +1,9 @@
-// Placeholder: In production, replace with actual icon.png file
-// For now, Electron will use a default icon
-// The tray functionality will work, just without a custom icon in development
+# Lumina Uninstaller - Assets
+
+This folder contains application assets like icons.
+
+## Files
+
+- `icon.png` - System tray icon (32x32px)
+  - Used for the minimize-to-tray feature
+  - Simple "L" logo in light blue/white
