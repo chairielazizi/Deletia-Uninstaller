@@ -14,7 +14,7 @@ const systemAPI = require('./system')
 
 // Auto-launch configuration
 const luminaAutoLauncher = new AutoLaunch({
-  name: 'Lumina Uninstaller',
+  name: 'Deletia Uninstaller',
   path: app.getPath('exe'),
 });
 
@@ -82,7 +82,7 @@ function createTray() {
     
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show Lumina',
+        label: 'Show Deletia',
         click: () => {
           mainWindow.show();
         }
@@ -97,7 +97,7 @@ function createTray() {
     ]);
     
     tray.setContextMenu(contextMenu);
-    tray.setToolTip('Lumina Uninstaller');
+    tray.setToolTip('Deletia Uninstaller');
     
     tray.on('click', () => {
       mainWindow.show();

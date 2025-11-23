@@ -62,7 +62,7 @@ const Settings = () => {
     <div className="settings-container">
       <div className="settings-header">
         <h1>Settings</h1>
-        <p>Customize your Lumina experience</p>
+        <p>Customize your Deletia experience</p>
       </div>
 
       <div className="settings-sections">
@@ -78,7 +78,7 @@ const Settings = () => {
               <Zap size={18} color="#38bdf8" />
               <div>
                 <div className="setting-name">Launch on startup</div>
-                <div className="setting-description">Start Lumina when Windows boots</div>
+                <div className="setting-description">Start Deletia when Windows boots</div>
               </div>
             </div>
             <label className="toggle">
@@ -181,7 +181,7 @@ const Settings = () => {
 
           <div className="about-content">
             <div className="about-logo">
-              <h2>Lumina</h2>
+              <h2>Deletia</h2>
             </div>
             <div className="about-info">
               <div className="info-row">
@@ -190,7 +190,7 @@ const Settings = () => {
               </div>
               <div className="info-row">
                 <span className="label">Build</span>
-                <span className="value">2024.11.23</span>
+                <span className="value">2025.11.23</span>
               </div>
               <div className="info-row">
                 <span className="label">Platform</span>
@@ -198,7 +198,7 @@ const Settings = () => {
               </div>
             </div>
             <p className="about-description">
-              Lumina is a modern, beautiful application uninstaller and system cleaner for Windows.
+              Deletia is a modern, beautiful application uninstaller and system cleaner for Windows.
               Designed to help you keep your system clean and organized.
             </p>
           </div>

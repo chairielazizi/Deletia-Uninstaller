@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, List, Trash2, Settings } from 'lucide-react';
 
-const Sidebar =  ({ activeView, setActiveView }) => {
+const Sidebar = ({ activeView, setActiveView }) => {
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { id: 'apps', icon: List, label: 'Applications' },
@@ -11,8 +11,8 @@ const Sidebar =  ({ activeView, setActiveView }) => {
 
   return (
     <div className="sidebar">
-      <div className="logo">
-        <h2>Lumina</h2>
+      <div className="sidebar-header">
+        <h2>Deletia</h2>
       </div>
       <nav>
         {menuItems.map((item) => (
@@ -39,12 +39,12 @@ const Sidebar =  ({ activeView, setActiveView }) => {
           height: 100%;
         }
         
-        .logo {
+        .sidebar-header {
           margin-bottom: 40px;
           padding-left: 10px;
         }
         
-        .logo h2 {
+        .sidebar-header h2 {
           margin: 0;
           background: linear-gradient(45deg, var(--accent-color), #a855f7);
           -webkit-background-clip: text;

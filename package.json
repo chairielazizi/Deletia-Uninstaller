@@ -1,14 +1,41 @@
 {
-  "name": "lumina-uninstaller",
+  "name": "deletia-uninstaller",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "electron-main/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on tcp:5173 && node launch-electron.js",
-    "build": "vite build",
+    "build": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.deletia.uninstaller",
+    "productName": "Deletia Uninstaller",
+    "files": [
+      "dist/**/*",
+      "electron-main/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "electron-auto-launch": "^5.0.7",
@@ -25,6 +52,7 @@
     "concurrently": "^8.2.2",
     "cross-env": "^10.1.0",
     "electron": "^28.3.3",
+    "electron-builder": "^26.0.12",
     "electron-reload": "^2.0.0-alpha.1",
     "vite": "^5.0.0",
     "wait-on": "^7.2.0"

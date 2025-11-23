@@ -27,3 +27,20 @@ body {
   padding-top: 32px; /* Account for titlebar */
   overflow: hidden;
 }
+
+/* Toast Progress Bar Styling */
+[data-react-hot-toast] {
+  z-index: 9999;
+}
+
+/* Make the progress bar visible with a lighter color */
+[data-react-hot-toast] > div[role="status"] > div:last-child {
+  background: rgba(255, 255, 255, 0.3) !important;
+  height: 4px !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+[data-react-hot-toast] > div[role="status"] > div:last-child > div {
+  background: rgba(255, 255, 255, 0.8) !important;
+  height: 100% !important;
+}

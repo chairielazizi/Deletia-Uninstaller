@@ -3,28 +3,26 @@ import { X, Minus, Square } from 'lucide-react';
 
 const Titlebar = () => {
   const handleMinimize = () => {
-    if (window.electronAPI?.minimizeWindow) {
+    if (window.electronAPI) {
       window.electronAPI.minimizeWindow();
     }
   };
 
   const handleMaximize = () => {
-    if (window.electronAPI?.maximizeWindow) {
+    if (window.electronAPI) {
       window.electronAPI.maximizeWindow();
     }
   };
 
   const handleClose = () => {
-    if (window.electronAPI?.closeWindow) {
+    if (window.electronAPI) {
       window.electronAPI.closeWindow();
     }
   };
 
   return (
     <div className="titlebar">
-      <div className="titlebar-drag">
-        <div className="app-title">Lumina Uninstaller</div>
-      </div>
+      <div className="titlebar-title">Deletia Uninstaller</div>
       <div className="window-controls">
         <button className="control-btn" onClick={handleMinimize} title="Minimize">
           <Minus size={14} />
@@ -49,18 +47,12 @@ const Titlebar = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 0 16px;
           z-index: 1000;
           -webkit-app-region: drag;
         }
 
-        .titlebar-drag {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          padding-left: 16px;
-        }
-
-        .app-title {
+        .titlebar-title {
           font-size: 12px;
           font-weight: 600;
           color: var(--text-primary);
