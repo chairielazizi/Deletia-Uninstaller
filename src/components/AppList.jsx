@@ -3,6 +3,7 @@ import { Package, Trash2, Search, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCache } from '../context/CacheContext';
 import toast, { Toaster } from 'react-hot-toast';
+import { toastConfig } from '../utils/toastConfig';
 
 const formatSize = (sizeInKB) => {
   if (!sizeInKB || sizeInKB === 0) return null;
@@ -40,18 +41,7 @@ const AppList = () => {
   const handleRefresh = async () => {
     const data = await fetchApps(true); // Force refresh
     setApps(data);
-    toast.success('Applications refreshed successfully!', {
-      duration: 3000,
-      position: 'top-center',
-      style: {
-        background: 'rgba(16, 185, 129, 0.9)',
-        color: '#fff',
-        padding: '16px 24px',
-        borderRadius: '12px',
-        fontSize: '14px',
-        fontWeight: '500',
-      },
-    });
+    toast.success('Applications refreshed successfully!', toastConfig);
   };
 
   const filteredApps = apps.filter(app => 

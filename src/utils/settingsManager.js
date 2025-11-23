@@ -23,11 +23,17 @@ export const getSettings = () => {
   }
 };
 
-export const saveSetting = (key, value) => {
+export const saveSetting = async (key, value) => {
   try {
     const current = getSettings();
     const updated = { ...current, [key]: value };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+    
+    // Also save to main process for tray/close handler
+    if (window.electronAPI?.saveSettings) {
+      await window.electronAPI.saveSettings(updated);
+    }
+    
     return updated;
   } catch (error) {
     console.error('Error saving setting:', error);
@@ -35,9 +41,14 @@ export const saveSetting = (key, value) => {
   }
 };
 
-export const saveSettings = (settings) => {
+export const saveSettings = async (settings) => {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    
+    // Also save to main process
+    if (window.electronAPI?.saveSettings) {
+      await window.electronAPI.saveSettings(settings);
+    }
   } catch (error) {
     console.error('Error saving settings:', error);
   }

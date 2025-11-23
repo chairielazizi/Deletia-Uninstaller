@@ -4,6 +4,7 @@ import { getRecentlyUsed, getFrequentlyUsed } from '../utils/usageTracker';
 import { getSpaceCleaned } from '../utils/systemUtils';
 import { useCache } from '../context/CacheContext';
 import toast, { Toaster } from 'react-hot-toast';
+import { toastConfig } from '../utils/toastConfig';
 
 const Dashboard = () => {
   const { fetchDashboardData, loadingDashboard, dashboardCache, systemStatusCache } = useCache();
@@ -37,18 +38,7 @@ const Dashboard = () => {
   const handleRefresh = async () => {
     const data = await fetchDashboardData(true); // Force refresh
     await processData(data.apps, data.systemStatus);
-    toast.success('Dashboard refreshed successfully!', {
-      duration: 3000,
-      position: 'top-center',
-      style: {
-        background: 'rgba(16, 185, 129, 0.9)',
-        color: '#fff',
-        padding: '16px 24px',
-        borderRadius: '12px',
-        fontSize: '14px',
-        fontWeight: '500',
-      },
-    });
+    toast.success('Dashboard refreshed successfully!', toastConfig);
   };
 
   const processData = async (allApps, cachedSystemStatus) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Moon, Bell, Shield, Info, Zap } from 'lucide-react';
 import { getSettings, saveSetting } from '../utils/settingsManager';
 import toast, { Toaster } from 'react-hot-toast';
+import { toastConfig } from '../utils/toastConfig';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -19,37 +20,42 @@ const Settings = () => {
     setSettings(loadedSettings);
   }, []);
 
-  const toggleSetting = (key) => {
+  const toggleSetting = async (key) => {
     const newValue = !settings[key];
-    const updatedSettings = saveSetting(key, newValue);
+    const updatedSettings = await saveSetting(key, newValue);
     setSettings(updatedSettings);
     
     // Show toast notification
     toast.success(`Setting updated successfully!`, {
+      ...toastConfig,
       duration: 2000,
-      position: 'top-center',
-      style: {
-        background: 'rgba(16, 185, 129, 0.9)',
-        color: '#fff',
-        padding: '16px 24px',
-        borderRadius: '12px',
-        fontSize: '14px',
-        fontWeight: '500',
-      },
     });
 
     // Apply setting immediately if needed
     if (key === 'autoStart') {
-      handleAutoStart(newValue);
+      await handleAutoStart(newValue);
     }
   };
 
-  const handleAutoStart = (enabled) => {
-    // In a real app, you'd use electron-auto-launch or similar
+  const handleAutoStart = async (enabled) => {
     if (window.electronAPI?.setAutoStart) {
-      window.electronAPI.setAutoStart(enabled);
+      try {
+        const result = await window.electronAPI.setAutoStart(enabled);
+        if (result && result.success) {
+          console.log(`Auto-start ${enabled ? 'enabled' : 'disabled'}`);
+        } else if (result && result.error) {
+          console.error('Failed to set auto-start:', result.error);
+          // Only show error if it's not a development mode issue
+          if (!result.error.includes('not packaged')) {
+            toast.error('Failed to update auto-start setting');
+          } else {
+            console.log('Auto-start only works in packaged app');
+          }
+        }
+      } catch (error) {
+        console.error('Error setting auto-start:', error);
+      }
     }
-    console.log(`Auto-start ${enabled ? 'enabled' : 'disabled'}`);
   };
 
   return (
