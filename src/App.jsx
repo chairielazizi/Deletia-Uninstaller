@@ -3,6 +3,8 @@ import Sidebar from './components/Sidebar';
 import Titlebar from './components/Titlebar';
 import Dashboard from './components/Dashboard';
 import AppList from './components/AppList';
+import Cleaner from './components/Cleaner';
+import Settings from './components/Settings';
 
 function App() {
   const [activeView, setActiveView] = useState('apps')
@@ -14,9 +16,9 @@ function App() {
       case 'apps':
         return <AppList />;
       case 'cleaner':
-        return <div className="placeholder">Cleaner Module Coming Soon</div>;
+        return <Cleaner />;
       case 'settings':
-        return <div className="placeholder">Settings Module Coming Soon</div>;
+        return <Settings />;
       default:
         return <AppList />;
     }
