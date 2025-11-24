@@ -1,24 +1,79 @@
-import React from 'react';
-import { LayoutDashboard, List, Trash2, Settings } from 'lucide-react';
+import React from "react";
+import { LayoutDashboard, List, Trash2, Settings } from "lucide-react";
 
 const Sidebar = ({ activeView, setActiveView }) => {
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'apps', icon: List, label: 'Applications' },
-    { id: 'cleaner', icon: Trash2, label: 'Cleaner' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { id: "apps", icon: List, label: "Applications" },
+    { id: "cleaner", icon: Trash2, label: "Cleaner" },
+    { id: "settings", icon: Settings, label: "Settings" },
   ];
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 32 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient
+              id="sidebarLogoGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#0ea5e9" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="4"
+            y="4"
+            width="8"
+            height="24"
+            fill="url(#sidebarLogoGradient)"
+          />
+          <rect
+            x="12"
+            y="4"
+            width="8"
+            height="8"
+            fill="url(#sidebarLogoGradient)"
+          />
+          <rect
+            x="12"
+            y="20"
+            width="8"
+            height="8"
+            fill="url(#sidebarLogoGradient)"
+          />
+          <rect
+            x="20"
+            y="8"
+            width="8"
+            height="4"
+            fill="url(#sidebarLogoGradient)"
+          />
+          <rect
+            x="20"
+            y="20"
+            width="8"
+            height="4"
+            fill="url(#sidebarLogoGradient)"
+          />
+        </svg>
         <h2>Deletia</h2>
       </div>
       <nav>
         {menuItems.map((item) => (
           <button
             key={item.id}
-            className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+            className={`nav-item ${activeView === item.id ? "active" : ""}`}
             onClick={() => setActiveView(item.id)}
           >
             <item.icon size={20} />
@@ -26,7 +81,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
           </button>
         ))}
       </nav>
-      
+
       <style>{`
         .sidebar {
           width: 250px;
@@ -42,6 +97,15 @@ const Sidebar = ({ activeView, setActiveView }) => {
         .sidebar-header {
           margin-bottom: 40px;
           padding-left: 10px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+
+        .sidebar-header:hover {
+          opacity: 0.8;
         }
         
         .sidebar-header h2 {

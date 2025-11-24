@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Minus, Square } from 'lucide-react';
+import React from "react";
+import { X, Minus, Square } from "lucide-react";
 
 const Titlebar = () => {
   const handleMinimize = () => {
@@ -22,15 +22,54 @@ const Titlebar = () => {
 
   return (
     <div className="titlebar">
-      <div className="titlebar-title">Deletia Uninstaller</div>
+      <div className="titlebar-title">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          style={{ marginRight: "8px", pointerEvents: "none" }}
+        >
+          <defs>
+            <linearGradient
+              id="logoGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#0ea5e9" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="4" height="12" fill="url(#logoGradient)" />
+          <rect x="6" y="2" width="4" height="4" fill="url(#logoGradient)" />
+          <rect x="6" y="10" width="4" height="4" fill="url(#logoGradient)" />
+          <rect x="10" y="4" width="4" height="2" fill="url(#logoGradient)" />
+          <rect x="10" y="10" width="4" height="2" fill="url(#logoGradient)" />
+        </svg>
+        Deletia Uninstaller
+      </div>
       <div className="window-controls">
-        <button className="control-btn" onClick={handleMinimize} title="Minimize">
+        <button
+          className="control-btn"
+          onClick={handleMinimize}
+          title="Minimize"
+        >
           <Minus size={14} />
         </button>
-        <button className="control-btn" onClick={handleMaximize} title="Maximize">
+        <button
+          className="control-btn"
+          onClick={handleMaximize}
+          title="Maximize"
+        >
           <Square size={14} />
         </button>
-        <button className="control-btn close-btn" onClick={handleClose} title="Close">
+        <button
+          className="control-btn close-btn"
+          onClick={handleClose}
+          title="Close"
+        >
           <X size={14} />
         </button>
       </div>
@@ -53,6 +92,8 @@ const Titlebar = () => {
         }
 
         .titlebar-title {
+          display: flex;
+          align-items: center;
           font-size: 12px;
           font-weight: 600;
           color: var(--text-primary);

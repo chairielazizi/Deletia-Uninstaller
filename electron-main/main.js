@@ -1,21 +1,21 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron')
-const path = require('path')
-const AutoLaunch = require('electron-auto-launch')
+const { app, BrowserWindow, ipcMain, Tray, Menu } = require("electron");
+const path = require("path");
+const AutoLaunch = require("electron-auto-launch");
 
 // Enable hot reload in development
 if (!app.isPackaged) {
-  require('electron-reload')(__dirname, {
-    electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-    hardResetMethod: 'exit'
+  require("electron-reload")(__dirname, {
+    electron: path.join(__dirname, "..", "node_modules", ".bin", "electron"),
+    hardResetMethod: "exit",
   });
 }
 
-const systemAPI = require('./system')
+const systemAPI = require("./system");
 
 // Auto-launch configuration
 const luminaAutoLauncher = new AutoLaunch({
-  name: 'Deletia Uninstaller',
-  path: app.getPath('exe'),
+  name: "Deletia Uninstaller",
+  path: app.getPath("exe"),
 });
 
 let mainWindow;
@@ -28,39 +28,40 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     frame: false,
-    titleBarStyle: 'hidden',
+    titleBarStyle: "hidden",
+    icon: path.join(__dirname, "../assets/icon.png"),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
     },
-    backgroundColor: '#0f172a',
-  })
+    backgroundColor: "#0f172a",
+  });
 
   const isDev = !app.isPackaged;
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
+    mainWindow.loadURL("http://localhost:5173");
+    mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 
   // Handle minimize to tray
-  mainWindow.on('close', (event) => {
+  mainWindow.on("close", (event) => {
     const settings = getSettings();
-    console.log('Window closing, settings:', settings);
-    
+    console.log("Window closing, settings:", settings);
+
     if (settings.minimizeToTray && !app.isQuitting) {
-      console.log('Minimizing to tray instead of closing');
+      console.log("Minimizing to tray instead of closing");
       event.preventDefault();
       mainWindow.hide();
     } else {
-      console.log('Closing app normally');
+      console.log("Closing app normally");
     }
-    
+
     // Clear cache on exit if enabled
     if (settings.clearCacheOnExit && app.isQuitting) {
-      console.log('Clearing cache on exit...');
+      console.log("Clearing cache on exit...");
       // Add actual cache clearing logic here
     }
   });
@@ -69,41 +70,41 @@ function createWindow() {
 function createTray() {
   try {
     // Create tray icon (you'll need to add an icon file)
-    const iconPath = path.join(__dirname, '../assets/icon.png');
-    
+    const iconPath = path.join(__dirname, "../assets/icon.png");
+
     // Check if icon exists, otherwise skip tray creation
-    const fs = require('fs');
+    const fs = require("fs");
     if (!fs.existsSync(iconPath)) {
-      console.log('Tray icon not found, skipping tray creation');
+      console.log("Tray icon not found, skipping tray creation");
       return;
     }
-    
+
     tray = new Tray(iconPath);
-    
+
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show Deletia',
+        label: "Show Deletia",
         click: () => {
           mainWindow.show();
-        }
+        },
       },
       {
-        label: 'Quit',
+        label: "Quit",
         click: () => {
           app.isQuitting = true;
           app.quit();
-        }
-      }
+        },
+      },
     ]);
-    
+
     tray.setContextMenu(contextMenu);
-    tray.setToolTip('Deletia Uninstaller');
-    
-    tray.on('click', () => {
+    tray.setToolTip("Deletia Uninstaller");
+
+    tray.on("click", () => {
       mainWindow.show();
     });
   } catch (error) {
-    console.error('Error creating tray:', error);
+    console.error("Error creating tray:", error);
   }
 }
 
@@ -112,63 +113,159 @@ function getSettings() {
   // In a real app, you'd read from a config file or database
   // For now, we'll use a simple approach
   try {
-    const fs = require('fs');
-    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    const fs = require("fs");
+    const settingsPath = path.join(app.getPath("userData"), "settings.json");
     if (fs.existsSync(settingsPath)) {
-      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      return JSON.parse(fs.readFileSync(settingsPath, "utf8"));
     }
   } catch (error) {
-    console.error('Error reading settings:', error);
+    console.error("Error reading settings:", error);
   }
   return { minimizeToTray: false, clearCacheOnExit: false };
 }
 
 app.whenReady().then(() => {
-  createWindow()
-  createTray()
+  createWindow();
+  createTray();
 
-  app.on('activate', () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow();
     }
-  })
-})
+  });
+});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});
 
 // System API handlers
-ipcMain.handle('get-apps', async () => {
-  return await systemAPI.getInstalledApps()
-})
+ipcMain.handle("get-apps", async () => {
+  return await systemAPI.getInstalledApps();
+});
 
-ipcMain.handle('uninstall-app', async (event, uninstallString) => {
-  return await systemAPI.uninstallApp(uninstallString)
-})
+ipcMain.handle("uninstall-app", async (event, uninstallString) => {
+  return await systemAPI.uninstallApp(uninstallString);
+});
 
-ipcMain.handle('get-disk-space', async () => {
-  return await systemAPI.getDiskSpace()
-})
+ipcMain.handle("get-disk-space", async () => {
+  return await systemAPI.getDiskSpace();
+});
 
-ipcMain.handle('get-temp-size', async () => {
-  return await systemAPI.getTempFilesSize()
-})
+ipcMain.handle("get-temp-size", async () => {
+  return await systemAPI.getTempFilesSize();
+});
+
+// Cleaner handlers
+ipcMain.handle("get-cleanable-files", async () => {
+  try {
+    const { spawn } = require("child_process");
+    const scriptPath = path.join(__dirname, "get-cleanable-files.ps1");
+
+    return new Promise((resolve, reject) => {
+      const powerShell = spawn("powershell.exe", [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        scriptPath,
+      ]);
+
+      let stdout = "";
+      let stderr = "";
+
+      powerShell.stdout.on("data", (data) => {
+        stdout += data.toString();
+      });
+
+      powerShell.stderr.on("data", (data) => {
+        stderr += data.toString();
+      });
+
+      powerShell.on("close", (code) => {
+        if (code !== 0) {
+          console.error("PowerShell error:", stderr);
+          reject(new Error(`PowerShell exited with code ${code}`));
+          return;
+        }
+        try {
+          const result = JSON.parse(stdout);
+          resolve(result);
+        } catch (error) {
+          console.error("Failed to parse JSON:", stdout);
+          reject(error);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error getting cleanable files:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("clean-files", async (event, itemIds) => {
+  try {
+    const { spawn } = require("child_process");
+    const scriptPath = path.join(__dirname, "clean-files.ps1");
+    const idsJson = JSON.stringify(itemIds);
+
+    return new Promise((resolve, reject) => {
+      const powerShell = spawn("powershell.exe", [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        scriptPath,
+        "-ItemIds",
+        idsJson,
+      ]);
+
+      let stdout = "";
+      let stderr = "";
+
+      powerShell.stdout.on("data", (data) => {
+        stdout += data.toString();
+      });
+
+      powerShell.stderr.on("data", (data) => {
+        stderr += data.toString();
+      });
+
+      powerShell.on("close", (code) => {
+        if (code !== 0) {
+          console.error("PowerShell error:", stderr);
+          reject(new Error(`PowerShell exited with code ${code}`));
+          return;
+        }
+        try {
+          const result = JSON.parse(stdout);
+          resolve(result);
+        } catch (error) {
+          console.error("Failed to parse JSON:", stdout);
+          reject(error);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error cleaning files:", error);
+    throw error;
+  }
+});
 
 // Settings handlers
-ipcMain.handle('set-auto-start', async (event, enabled) => {
+ipcMain.handle("set-auto-start", async (event, enabled) => {
   try {
     // Auto-launch only works in packaged apps
     if (!app.isPackaged) {
-      console.log('Auto-launch is only available in packaged apps');
-      return { 
-        success: true, 
-        note: 'Auto-launch only works in production (packaged app)' 
+      console.log("Auto-launch is only available in packaged apps");
+      return {
+        success: true,
+        note: "Auto-launch only works in production (packaged app)",
       };
     }
-    
+
     if (enabled) {
       await luminaAutoLauncher.enable();
     } else {
@@ -176,66 +273,66 @@ ipcMain.handle('set-auto-start', async (event, enabled) => {
     }
     return { success: true };
   } catch (error) {
-    console.error('Error setting auto-start:', error);
+    console.error("Error setting auto-start:", error);
     return { success: false, error: error.message };
   }
-})
+});
 
-ipcMain.handle('get-auto-start', async () => {
+ipcMain.handle("get-auto-start", async () => {
   try {
     const isEnabled = await luminaAutoLauncher.isEnabled();
     return isEnabled;
   } catch (error) {
-    console.error('Error getting auto-start status:', error);
+    console.error("Error getting auto-start status:", error);
     return false;
   }
-})
+});
 
 // Save settings to file
-ipcMain.handle('save-settings', async (event, settings) => {
+ipcMain.handle("save-settings", async (event, settings) => {
   try {
-    const fs = require('fs');
-    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    const fs = require("fs");
+    const settingsPath = path.join(app.getPath("userData"), "settings.json");
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
     return { success: true };
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error("Error saving settings:", error);
     return { success: false, error: error.message };
   }
-})
+});
 
 // Get settings from file
-ipcMain.handle('get-settings', async () => {
+ipcMain.handle("get-settings", async () => {
   try {
-    const fs = require('fs');
-    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    const fs = require("fs");
+    const settingsPath = path.join(app.getPath("userData"), "settings.json");
     if (fs.existsSync(settingsPath)) {
-      const data = fs.readFileSync(settingsPath, 'utf8');
+      const data = fs.readFileSync(settingsPath, "utf8");
       return JSON.parse(data);
     }
     return null;
   } catch (error) {
-    console.error('Error reading settings:', error);
+    console.error("Error reading settings:", error);
     return null;
   }
-})
+});
 
 // Window control handlers
-ipcMain.on('minimize-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender)
-  win.minimize()
-})
+ipcMain.on("minimize-window", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.minimize();
+});
 
-ipcMain.on('maximize-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender)
+ipcMain.on("maximize-window", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
   if (win.isMaximized()) {
-    win.unmaximize()
+    win.unmaximize();
   } else {
-    win.maximize()
+    win.maximize();
   }
-})
+});
 
-ipcMain.on('close-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender)
-  win.close()
-})
+ipcMain.on("close-window", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.close();
+});

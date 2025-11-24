@@ -1,65 +1,124 @@
-import React, { useState } from 'react';
-import { Trash2, HardDrive, FolderOpen, RefreshCw, CheckCircle2 } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Trash2,
+  HardDrive,
+  FolderOpen,
+  RefreshCw,
+  CheckCircle2,
+} from "lucide-react";
 
 const Cleaner = () => {
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [cleaning, setCleaning] = useState(false);
   const [cleanItems, setCleanItems] = useState([
-    { id: 'temp', name: 'Temporary Files', path: '%TEMP%', size: 0, checked: true, icon: FolderOpen },
-    { id: 'wintemp', name: 'Windows Temp', path: 'C:\\Windows\\Temp', size: 0, checked: true, icon: FolderOpen },
-    { id: 'prefetch', name: 'Prefetch Files', path: 'C:\\Windows\\Prefetch', size: 0, checked: false, icon: FolderOpen },
-    { id: 'recyclebin', name: 'Recycle Bin', path: 'System', size: 0, checked: true, icon: Trash2 },
-    { id: 'downloads', name: 'Downloads Folder', path: '%USERPROFILE%\\Downloads', size: 0, checked: false, icon: FolderOpen },
+    {
+      id: "temp",
+      name: "Temporary Files",
+      path: "%TEMP%",
+      size: 0,
+      checked: true,
+      icon: FolderOpen,
+    },
+    {
+      id: "wintemp",
+      name: "Windows Temp",
+      path: "C:\\Windows\\Temp",
+      size: 0,
+      checked: true,
+      icon: FolderOpen,
+    },
+    {
+      id: "prefetch",
+      name: "Prefetch Files",
+      path: "C:\\Windows\\Prefetch",
+      size: 0,
+      checked: false,
+      icon: FolderOpen,
+    },
+    {
+      id: "recyclebin",
+      name: "Recycle Bin",
+      path: "System",
+      size: 0,
+      checked: true,
+      icon: Trash2,
+    },
+    {
+      id: "downloads",
+      name: "Downloads Folder",
+      path: "%USERPROFILE%\\Downloads",
+      size: 0,
+      checked: false,
+      icon: FolderOpen,
+    },
   ]);
 
   const handleScan = async () => {
     setScanning(true);
-    
-    // Simulate scanning (in real app, this would call backend APIs)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock data - in real app this would come from actual file system scanning
-    const mockSizes = {
-      temp: 1250000,      // ~1.19 GB
-      wintemp: 850000,    // ~831 MB
-      prefetch: 45000,    // ~44 MB
-      recyclebin: 320000, // ~312 MB
-      downloads: 0,       // 0 MB
-    };
 
-    setCleanItems(items => items.map(item => ({
-      ...item,
-      size: mockSizes[item.id] || 0
-    })));
-    
-    setScanning(false);
-    setScanned(true);
+    try {
+      if (window.electronAPI) {
+        const data = await window.electronAPI.getCleanableFiles();
+
+        // Update items with real sizes
+        const updatedItems = cleanItems.map((item) => {
+          const scannedItem = data.find((si) => si.id === item.id);
+          return scannedItem ? { ...item, size: scannedItem.size } : item;
+        });
+
+        setCleanItems(updatedItems);
+        setScanned(true);
+      }
+    } catch (error) {
+      console.error("Scan error:", error);
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleClean = async () => {
+    const itemsToClean = cleanItems
+      .filter((item) => item.checked && item.size > 0)
+      .map((item) => item.id);
+
+    if (itemsToClean.length === 0) {
+      return;
+    }
+
     setCleaning(true);
-    
-    // Simulate cleaning
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Reset sizes for checked items
-    setCleanItems(items => items.map(item => ({
-      ...item,
-      size: item.checked ? 0 : item.size
-    })));
-    
-    setCleaning(false);
+
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.cleanFiles(itemsToClean);
+
+        if (result.success) {
+          // Reset sizes for cleaned items
+          setCleanItems((items) =>
+            items.map((item) => ({
+              ...item,
+              size: result.cleaned.includes(item.id) ? 0 : item.size,
+            }))
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Clean error:", error);
+    } finally {
+      setCleaning(false);
+    }
   };
 
   const toggleItem = (id) => {
-    setCleanItems(items => items.map(item => 
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
+    setCleanItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      )
+    );
   };
 
   const formatSize = (sizeInKB) => {
-    if (sizeInKB === 0) return '0 MB';
+    if (sizeInKB === 0) return "0 MB";
     const sizeInMB = sizeInKB / 1024;
     if (sizeInMB < 1024) {
       return `${sizeInMB.toFixed(0)} MB`;
@@ -69,7 +128,7 @@ const Cleaner = () => {
   };
 
   const totalSize = cleanItems
-    .filter(item => item.checked)
+    .filter((item) => item.checked)
     .reduce((sum, item) => sum + item.size, 0);
 
   return (
@@ -88,8 +147,8 @@ const Cleaner = () => {
           </div>
         </div>
         <div className="action-buttons">
-          <button 
-            className="btn btn-secondary" 
+          <button
+            className="btn btn-secondary"
             onClick={handleScan}
             disabled={scanning || cleaning}
           >
@@ -101,12 +160,12 @@ const Cleaner = () => {
             ) : (
               <>
                 <RefreshCw size={18} />
-                {scanned ? 'Rescan' : 'Start Scan'}
+                {scanned ? "Rescan" : "Start Scan"}
               </>
             )}
           </button>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={handleClean}
             disabled={!scanned || totalSize === 0 || cleaning}
           >
@@ -126,7 +185,7 @@ const Cleaner = () => {
       </div>
 
       <div className="clean-items-list">
-        {cleanItems.map(item => (
+        {cleanItems.map((item) => (
           <div key={item.id} className="clean-item">
             <label className="item-checkbox">
               <input
@@ -145,7 +204,7 @@ const Cleaner = () => {
               <div className="item-path">{item.path}</div>
             </div>
             <div className="item-size">
-              {scanned ? formatSize(item.size) : '--'}
+              {scanned ? formatSize(item.size) : "--"}
             </div>
           </div>
         ))}
